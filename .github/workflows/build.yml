@@ -23,12 +23,19 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Accept SDK licenses
+        run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
       - name: Install required SDK components
         run: |
-          yes | sdkmanager "platforms;android-34" "build-tools;34.0.0" 2>/dev/null || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Install Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip
+          echo "GRADLE_HOME=${GITHUB_WORKSPACE}/gradle-8.7" >> $GITHUB_ENV
+          echo "${GITHUB_WORKSPACE}/gradle-8.7/bin" >> $GITHUB_PATH
 
       - name: Generate Gradle Wrapper
         run: gradle wrapper --gradle-version 8.7
