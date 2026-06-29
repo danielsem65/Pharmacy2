@@ -31,16 +31,16 @@ jobs:
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Download Gradle 8.7
+      - name: Download Gradle 8.9
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
-          unzip -q gradle-8.7-bin.zip
+          wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          unzip -q gradle-8.9-bin.zip
 
       - name: Build APK
         id: build
         run: |
           echo "JAVA_HOME=$JAVA_HOME"
-          ${GITHUB_WORKSPACE}/gradle-8.7/bin/gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+          ${GITHUB_WORKSPACE}/gradle-8.9/bin/gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
           exit_code=${PIPESTATUS[0]}
           echo "exitcode=$exit_code" >> $GITHUB_OUTPUT
           exit $exit_code
