@@ -23,35 +23,23 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install required SDK components
+      - name: Accept licenses and install SDK
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
       - name: Create local.properties
-        run: echo "sdk.dir=${ANDROID_HOME}" > local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Install Gradle
-        run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
-          unzip -q gradle-8.7-bin.zip
-          echo "GRADLE_HOME=${GITHUB_WORKSPACE}/gradle-8.7" >> $GITHUB_ENV
-          echo "${GITHUB_WORKSPACE}/gradle-8.7/bin" >> $GITHUB_PATH
-
-      - name: Build Debug APK
-        run: |
-          gradle assembleDebug --no-daemon 2>&1 | tee build.log
-          exit ${PIPESTATUS[0]}
-
-      - name: Upload build log
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          name: build-log
-          path: build.log
+          gradle-version: 8.7
+
+      - name: Build with Gradle
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: PharmacyInventory-Debug
