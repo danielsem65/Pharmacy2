@@ -7,7 +7,7 @@
     <a href="https://github.com/danielsem65/Pharmacy2/actions/workflows/build.yml">
       <img src="https://github.com/danielsem65/Pharmacy2/actions/workflows/build.yml/badge.svg" alt="Build">
     </a>
-    <a href="https://github.com/danielsem65/Pharmacy2/releases">
+    <a href="https://github.com/danielsem65/Pharmacy2">
       <img src="https://img.shields.io/badge/version-1.0-blue" alt="Version">
     </a>
     <a href="https://github.com/danielsem65/Pharmacy2/blob/main/LICENSE">
@@ -15,6 +15,8 @@
     </a>
     <img src="https://img.shields.io/badge/API-21%2B-brightgreen" alt="API 21+">
     <img src="https://img.shields.io/badge/platform-Android-lightgrey" alt="Platform">
+    <img src="https://img.shields.io/badge/language-Kotlin-purple" alt="Kotlin">
+    <img src="https://img.shields.io/badge/arch-MVVM-important" alt="MVVM">
   </p>
 </div>
 
@@ -22,9 +24,9 @@
 
 ## Overview
 
-**Pharmacy Inventory** bridges the gap between customers and medication pricing. Browse the complete medicine catalog at **SCAB Pharmacy**, search for specific drugs by name, check current prices, and access the pharmacy website &mdash; all in one place.
+**Pharmacy Inventory** is a modern Android application that connects customers with real-time medication pricing at SCAB Pharmacy. Browse the complete catalog, search for specific drugs, view prices, and access the pharmacy website &mdash; all with a polished Material 3 interface and robust offline support.
 
-The app intelligently caches data locally so you can browse medicine prices anytime, even without an internet connection.
+Built with **Kotlin**, **MVVM architecture**, **Room database**, and **Retrofit**, this app demonstrates production-grade Android development practices.
 
 ---
 
@@ -32,28 +34,158 @@ The app intelligently caches data locally so you can browse medicine prices anyt
 
 | | Feature | Description |
 |---|---------|-------------|
-| 🔍 | **Smart Search** | Real-time filtering as you type &mdash; find any medicine instantly |
-| 📡 | **Offline Mode** | Data is cached locally on first load; browse without internet |
-| 🔄 | **Live Updates** | Pull fresh pricing data with a single tap from the menu |
-| 🌐 | **In-App WebView** | Browse the SCAB Pharmacy website without leaving the app |
-| ⚡ | **Fast Startup** | Splash screen loads in 3 seconds, cached data shows immediately |
-| 🎨 | **Clean UI** | Material-inspired design with intuitive navigation |
+| 🔍 | **Smart Search** | Real-time filtering with Material SearchView |
+| 📡 | **Offline First** | Room database caches data locally; works fully offline after first load |
+| 🔄 | **Pull to Refresh** | Swipe down to fetch the latest prices |
+| 🌐 | **In-App WebView** | Browse SCAB Pharmacy website without leaving the app |
+| ⚡ | **Splash Screen** | Android 12+ SplashScreen API with seamless transition |
+| 🎨 | **Material 3** | Modern design with dynamic theming |
+| 🗄️ | **Room Database** | Structured local persistence with DAO pattern |
 
 ---
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| **Language** | Java 8+ |
-| **Minimum SDK** | API 21 (Android 5.0 Lollipop) |
-| **Target SDK** | API 34 (Android 14) |
-| **Architecture** | Single-Activity with ViewBinding |
-| **Networking** | OkHttp 4.12 |
+| Layer | Technology |
+|-------|-----------|
+| **Language** | Kotlin 1.9 |
+| **Architecture** | MVVM (Model-View-ViewModel) |
+| **Async** | Kotlin Coroutines + Flow |
+| **Networking** | Retrofit 2.9 + OkHttp 4.12 |
 | **Serialization** | Gson 2.11 |
-| **Build System** | Gradle 8.7 + Android Gradle Plugin 8.7 |
+| **Local Storage** | Room 2.6 (SQLite) |
+| **UI** | Material 3, ViewBinding, RecyclerView |
 | **CI/CD** | GitHub Actions |
-| **Caching** | Internal file storage (JSON) |
+| **Min SDK** | API 21 (Android 5.0) |
+| **Target SDK** | API 34 (Android 14) |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                       UI LAYER                          │
+│                                                         │
+│  ┌────────────────┐     ┌──────────────────────────┐   │
+│  │ SplashActivity  │────>│    DashboardActivity      │   │
+│  │ (SplashScreen)  │     │                          │   │
+│  └────────────────┘     │  MaterialToolbar + Menu   │   │
+│                         │  SearchView               │   │
+│                         │  RecyclerView (medicines) │   │
+│                         │  SwipeRefreshLayout       │   │
+│                         │  WebView (pharmacy site)  │   │
+│                         └──────────┬───────────────┘   │
+│                                    │ observes          │
+│                         ┌──────────┴───────────────┐   │
+│                         │   DashboardViewModel      │   │
+│                         │   (StateFlow<UiState>)    │   │
+│                         └──────────┬───────────────┘   │
+└────────────────────────────────────┼───────────────────┘
+                                     │ calls
+┌────────────────────────────────────┼───────────────────┐
+│                         DATA LAYER │                   │
+│                                     │                   │
+│  ┌──────────────────────────────────┴──────────────┐   │
+│  │            MedicineRepository                   │   │
+│  │  ┌──────────────────┐    ┌──────────────────┐   │   │
+│  │  │  Network First   │    │  Cache Fallback  │   │   │
+│  │  └────────┬─────────┘    └────────┬─────────┘   │   │
+│  └───────────┼───────────────────────┼──────────────┘   │
+│              │                       │                   │
+│  ┌───────────┴─────────┐  ┌─────────┴────────────┐   │
+│  │  Retrofit (Remote)  │  │  Room (Local DB)     │   │
+│  │  ApiService         │  │  MedicineDao         │   │
+│  │  MedicineDto        │  │  MedicineEntity      │   │
+│  └─────────────────────┘  └──────────────────────┘   │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Data Flow
+
+```
+User opens app
+      │
+      ▼
+SplashActivity (1.5s) ───► DashboardActivity
+                                │
+                                ▼
+                    DashboardViewModel.init()
+                                │
+                    ┌───────────┴───────────┐
+                    │                       │
+                    ▼                       ▼
+         Load from Room            Fetch from API
+         (offline cache)           (Retrofit)
+                    │                       │
+                    │               ┌───────┴───────┐
+                    │               │               │
+                    │               ▼               ▼
+                    │          Success          Failure
+                    │               │               │
+                    │               ▼               ▼
+                    │       Save to Room      Use Room cache
+                    │       Update UI         (if available)
+                    │               │               │
+                    └───────┬───────┘               │
+                            │                       │
+                            ▼                       ▼
+                    UiState.Success          UiState.Offline
+                    UiState.Error (no cache)
+```
+
+---
+
+## Project Structure
+
+```
+Pharmacy2/
+├── .github/workflows/
+│   └── build.yml                    # CI: automated APK builds
+├── app/
+│   └── src/main/
+│       ├── java/com/semdev/pharma/inv/
+│       │   ├── PharmacyApp.kt                  # Application class
+│       │   ├── data/
+│       │   │   ├── local/
+│       │   │   │   ├── AppDatabase.kt          # Room database singleton
+│       │   │   │   ├── MedicineDao.kt          # Data access object
+│       │   │   │   └── MedicineEntity.kt       # Room entity
+│       │   │   ├── remote/
+│       │   │   │   ├── ApiService.kt           # Retrofit API interface
+│       │   │   │   ├── MedicineDto.kt          # Network DTO
+│       │   │   │   └── RetrofitClient.kt       # HTTP client config
+│       │   │   └── repository/
+│       │   │       └── MedicineRepository.kt   # Repository (network + cache)
+│       │   ├── ui/
+│       │   │   ├── dashboard/
+│       │   │   │   ├── DashboardActivity.kt    # Main screen
+│       │   │   │   ├── DashboardViewModel.kt   # ViewModel with StateFlow
+│       │   │   │   └── MedicineAdapter.kt      # RecyclerView adapter
+│       │   │   └── splash/
+│       │   │       └── SplashActivity.kt       # Splash screen
+│       │   └── util/
+│       │       └── NetworkUtils.kt             # Connectivity checker
+│       ├── res/
+│       │   ├── layout/
+│       │   │   ├── activity_dashboard.xml      # Dashboard layout (Material 3)
+│       │   │   └── item_medicine.xml           # List item card layout
+│       │   ├── menu/
+│       │   │   └── dashboard_menu.xml          # Overflow menu
+│       │   ├── values/
+│       │   │   ├── colors.xml                  # Material 3 color palette
+│       │   │   ├── strings.xml
+│       │   │   └── styles.xml                  # Material 3 theme
+│       │   ├── drawable-xhdpi/                 # Vector icons
+│       │   └── mipmap-*/                       # Launcher icons
+│       └── AndroidManifest.xml
+├── build.gradle
+├── app/build.gradle
+├── settings.gradle
+├── gradle.properties
+└── README.md
+```
 
 ---
 
@@ -61,7 +193,7 @@ The app intelligently caches data locally so you can browse medicine prices anyt
 
 ### Download the APK
 
-Pre-built debug APKs are generated automatically with every push. Grab the latest from GitHub Actions:
+Pre-built debug APKs are generated automatically with every push.
 
 1. Go to [Actions](https://github.com/danielsem65/Pharmacy2/actions)
 2. Click the latest successful workflow run
@@ -75,7 +207,7 @@ Pre-built debug APKs are generated automatically with every push. Grab the lates
 git clone https://github.com/danielsem65/Pharmacy2.git
 cd Pharmacy2
 
-# Build debug APK
+# Build debug APK (requires JDK 17 and Android SDK)
 ./gradlew assembleDebug
 
 # Output:
@@ -84,92 +216,7 @@ cd Pharmacy2
 
 ---
 
-## Project Structure
-
-```
-Pharmacy2/
-├── .github/workflows/
-│   └── build.yml                # CI: automated APK builds on push
-├── app/
-│   ├── src/main/
-│   │   ├── java/com/semdev/pharma/inv/
-│   │   │   ├── DashboardActivity.java       # Main UI, search, list, WebView
-│   │   │   ├── MainActivity.java            # Splash screen (3s delay)
-│   │   │   ├── RequestNetwork.java          # Network request wrapper
-│   │   │   ├── RequestNetworkController.java # OkHttp client (SSL, headers)
-│   │   │   ├── FileUtil.java                # File I/O utilities
-│   │   │   └── SketchwareUtil.java          # General-purpose helpers
-│   │   ├── res/
-│   │   │   ├── layout/                      # XML layouts (main, dashboard, items)
-│   │   │   ├── values/                      # Colors, strings, styles
-│   │   │   ├── drawable-xhdpi/              # Vector icons & assets
-│   │   │   └── mipmap-*/                    # Launcher icons (hdpi–xxxhdpi)
-│   │   └── AndroidManifest.xml
-│   └── build.gradle
-├── build.gradle
-├── settings.gradle
-├── gradle.properties
-└── README.md
-```
-
----
-
-## Architecture
-
-```
-┌──────────────────┐     ┌─────────────────────────────────────┐
-│                  │     │                                     │
-│   MainActivity   │────>│          DashboardActivity           │
-│   (Splash)       │     │                                     │
-│                  │     │  ┌──────────────┐  ┌──────────────┐ │
-└──────────────────┘     │  │   ListView    │  │   WebView    │ │
-                         │  │  (Medicines)  │  │  (Website)   │ │
-                         │  └──────┬───────┘  └──────┬───────┘ │
-                         │         │                 │         │
-                         │  ┌──────┴───────┐         │         │
-                         │  │  Search Bar  │         │         │
-                         │  └──────────────┘         │         │
-                         │         │                 │         │
-                         │         └─── toggle ──────┘         │
-                         └─────────────────────────────────────┘
-```
-
-### Data Flow
-
-```
- ┌─────────────┐     ┌──────────────┐     ┌──────────────────┐
- │ App Launch  │────>│ Load Cache   │────>│ Network Request  │
- └─────────────┘     │ (if exists)  │     └────────┬─────────┘
-                     └──────────────┘              │
-                                          ┌────────┴────────┐
-                                          ▼                 ▼
-                                   ┌────────────┐   ┌──────────────┐
-                                   │  Success   │   │   Failure    │
-                                   └──────┬─────┘   └──────┬───────┘
-                                          ▼                 ▼
-                                   ┌────────────┐   ┌──────────────┐
-                                   │ Save Cache │   │ Load Cache   │
-                                   │ Update UI  │   │ (fallback)   │
-                                   └────────────┘   └──────────────┘
-```
-
-<details>
-<summary><b>Detailed Flow</b></summary>
-
-1. App launches &rarr; immediately loads cached data from internal storage (if available)
-2. Fires a **GET** request to the JSON API endpoint
-3. **On success:** parses the response, updates the ListView, and persists the raw JSON to `pharma_cache.json`
-4. **On failure (no internet):** falls back to the cached JSON and displays a **"Loaded from offline cache"** toast
-5. User can search by name (TextWatcher filters in real-time)
-6. Back button toggles between medicine list and WebView
-
-</details>
-
----
-
 ## Contributing
-
-Contributions are welcome! Here's how you can help:
 
 1. **Fork** the project
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
