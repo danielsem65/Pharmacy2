@@ -38,19 +38,17 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             _uiState.value = UiState.Loading
 
-            val cached = repository.getCachedMedicines()
-            if (cached.isNotEmpty()) {
-                allMedicines = cached
-                _uiState.value = UiState.Offline(cached)
-            }
-
             when (val result = repository.getMedicines()) {
                 is MedicineRepository.Result.Success -> {
                     allMedicines = result.data
                     _uiState.value = UiState.Success(result.data)
                 }
                 is MedicineRepository.Result.Error -> {
-                    if (cached.isEmpty()) {
+                    val cached = repository.getCachedMedicines()
+                    if (cached.isNotEmpty()) {
+                        allMedicines = cached
+                        _uiState.value = UiState.Offline(cached)
+                    } else {
                         _uiState.value = UiState.Error(result.message)
                     }
                 }

@@ -26,7 +26,7 @@
 
 **Pharmacy Inventory** is a modern Android application that connects customers with real-time medication pricing at SCAB Pharmacy. Browse the complete catalog, search for specific drugs, view prices, and access the pharmacy website &mdash; all with a polished Material 3 interface and robust offline support.
 
-Built with **Kotlin**, **MVVM architecture**, **Room database**, and **Retrofit**, this app demonstrates production-grade Android development practices.
+Built with **Kotlin**, **MVVM architecture**, **file-based JSON caching**, and **Retrofit**, this app demonstrates production-grade Android development practices.
 
 ---
 
@@ -35,12 +35,12 @@ Built with **Kotlin**, **MVVM architecture**, **Room database**, and **Retrofit*
 | | Feature | Description |
 |---|---------|-------------|
 | 🔍 | **Smart Search** | Real-time filtering with Material SearchView |
-| 📡 | **Offline First** | Room database caches data locally; works fully offline after first load |
+| 📡 | **Offline First** | File-based JSON cache; works fully offline after first load |
 | 🔄 | **Pull to Refresh** | Swipe down to fetch the latest prices |
 | 🌐 | **In-App WebView** | Browse SCAB Pharmacy website without leaving the app |
 | ⚡ | **Splash Screen** | Android 12+ SplashScreen API with seamless transition |
 | 🎨 | **Material 3** | Modern design with dynamic theming |
-| 🗄️ | **Room Database** | Structured local persistence with DAO pattern |
+| 🗄️ | **JSON Cache** | File-based local persistence with Gson serialization |
 
 ---
 
@@ -53,7 +53,7 @@ Built with **Kotlin**, **MVVM architecture**, **Room database**, and **Retrofit*
 | **Async** | Kotlin Coroutines + Flow |
 | **Networking** | Retrofit 2.9 + OkHttp 4.12 |
 | **Serialization** | Gson 2.11 |
-| **Local Storage** | Room 2.6 (SQLite) |
+| **Local Storage** | File-based JSON cache (Gson) |
 | **UI** | Material 3, ViewBinding, RecyclerView |
 | **CI/CD** | GitHub Actions |
 | **Min SDK** | API 21 (Android 5.0) |
@@ -94,9 +94,9 @@ Built with **Kotlin**, **MVVM architecture**, **Room database**, and **Retrofit*
 │  └───────────┼───────────────────────┼──────────────┘   │
 │              │                       │                   │
 │  ┌───────────┴─────────┐  ┌─────────┴────────────┐   │
-│  │  Retrofit (Remote)  │  │  Room (Local DB)     │   │
-│  │  ApiService         │  │  MedicineDao         │   │
-│  │  MedicineDto        │  │  MedicineEntity      │   │
+│  │  Retrofit (Remote)  │  │  JSON File (Cache)   │   │
+│  │  ApiService         │  │  pharma_cache.json   │   │
+│  │  MedicineDto        │  │  Gson serialization  │   │
 │  └─────────────────────┘  └──────────────────────┘   │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
@@ -116,8 +116,8 @@ SplashActivity (1.5s) ───► DashboardActivity
                     ┌───────────┴───────────┐
                     │                       │
                     ▼                       ▼
-         Load from Room            Fetch from API
-         (offline cache)           (Retrofit)
+          Load from JSON cache      Fetch from API
+          (pharma_cache.json)       (Retrofit)
                     │                       │
                     │               ┌───────┴───────┐
                     │               │               │
@@ -125,7 +125,7 @@ SplashActivity (1.5s) ───► DashboardActivity
                     │          Success          Failure
                     │               │               │
                     │               ▼               ▼
-                    │       Save to Room      Use Room cache
+                    │                           Save to JSON cache Use JSON cache
                     │       Update UI         (if available)
                     │               │               │
                     └───────┬───────┘               │
@@ -177,7 +177,8 @@ Pharmacy2/
 │       │   │   ├── colors.xml                  # Material 3 color palette
 │       │   │   ├── strings.xml
 │       │   │   └── styles.xml                  # Material 3 theme
-│       │   ├── drawable-xhdpi/                 # Vector icons
+│   │   ├── drawable/                       # Vector icons
+│   │   ├── drawable-xhdpi/                 # Raster images
 │       │   └── mipmap-*/                       # Launcher icons
 │       └── AndroidManifest.xml
 ├── build.gradle
