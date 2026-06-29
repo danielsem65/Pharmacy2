@@ -25,24 +25,19 @@ jobs:
 
       - name: Install SDK components
         run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-34" "build-tools;34.0.0" --sdk_root=$ANDROID_HOME
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Download and install Gradle
+      - name: Download Gradle 8.7
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
           unzip -q gradle-8.7-bin.zip
-          sudo ln -s ${GITHUB_WORKSPACE}/gradle-8.7/bin/gradle /usr/local/bin/gradle
-          gradle --version
-
-      - name: Generate wrapper
-        run: gradle wrapper --gradle-version 8.7
 
       - name: Build APK
-        run: ./gradlew assembleDebug --no-daemon
+        run: ${GITHUB_WORKSPACE}/gradle-8.7/bin/gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
