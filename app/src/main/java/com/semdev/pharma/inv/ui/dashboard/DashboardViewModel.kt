@@ -4,7 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.semdev.pharma.inv.PharmacyApp
-import com.semdev.pharma.inv.data.local.MedicineEntity
+import com.semdev.pharma.inv.data.Medicine
+import com.semdev.pharma.inv.data.repository.MedicineRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = (application as PharmacyApp).repository
+    private val repository: MedicineRepository = (application as PharmacyApp).repository
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -20,13 +21,13 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private var allMedicines: List<MedicineEntity> = emptyList()
+    private var allMedicines: List<Medicine> = emptyList()
 
     sealed class UiState {
         data object Loading : UiState()
-        data class Success(val medicines: List<MedicineEntity>) : UiState()
+        data class Success(val medicines: List<Medicine>) : UiState()
         data class Error(val message: String) : UiState()
-        data class Offline(val medicines: List<MedicineEntity>) : UiState()
+        data class Offline(val medicines: List<Medicine>) : UiState()
     }
 
     init {
@@ -44,11 +45,11 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             }
 
             when (val result = repository.getMedicines()) {
-                is com.semdev.pharma.inv.data.repository.MedicineRepository.Result.Success -> {
+                is MedicineRepository.Result.Success -> {
                     allMedicines = result.data
                     _uiState.value = UiState.Success(result.data)
                 }
-                is com.semdev.pharma.inv.data.repository.MedicineRepository.Result.Error -> {
+                is MedicineRepository.Result.Error -> {
                     if (cached.isEmpty()) {
                         _uiState.value = UiState.Error(result.message)
                     }

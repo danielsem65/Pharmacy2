@@ -33,6 +33,7 @@ jobs:
       - name: Create local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "ANDROID_HOME is: $ANDROID_HOME"
 
       - name: Install Gradle
         run: |
@@ -41,8 +42,19 @@ jobs:
           echo "GRADLE_HOME=${GITHUB_WORKSPACE}/gradle-8.7" >> $GITHUB_ENV
           echo "${GITHUB_WORKSPACE}/gradle-8.7/bin" >> $GITHUB_PATH
 
+      - name: Check versions
+        run: |
+          echo "Java:"
+          java -version 2>&1
+          echo "Gradle:"
+          gradle --version 2>&1
+          echo "SDK:"
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          ls -la ${ANDROID_HOME}/platforms/ 2>&1 || true
+          ls -la ${ANDROID_HOME}/build-tools/ 2>&1 || true
+
       - name: Build Debug APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug --stacktrace 2>&1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

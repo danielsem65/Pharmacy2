@@ -5,10 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.semdev.pharma.inv.data.local.MedicineEntity
+import com.semdev.pharma.inv.data.Medicine
 import com.semdev.pharma.inv.databinding.ItemMedicineBinding
 
-class MedicineAdapter : ListAdapter<MedicineEntity, MedicineAdapter.ViewHolder>(DiffCallback) {
+class MedicineAdapter : ListAdapter<Medicine, MedicineAdapter.ViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemMedicineBinding.inflate(
@@ -22,18 +22,18 @@ class MedicineAdapter : ListAdapter<MedicineEntity, MedicineAdapter.ViewHolder>(
     }
 
     class ViewHolder(private val binding: ItemMedicineBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(medicine: MedicineEntity) {
+        fun bind(medicine: Medicine) {
             binding.textName.text = medicine.name
             binding.textPrice.text = medicine.salesPrice
         }
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<MedicineEntity>() {
-        override fun areItemsTheSame(oldItem: MedicineEntity, newItem: MedicineEntity): Boolean {
-            return oldItem.id == newItem.id
+    private object DiffCallback : DiffUtil.ItemCallback<Medicine>() {
+        override fun areItemsTheSame(oldItem: Medicine, newItem: Medicine): Boolean {
+            return oldItem.name == newItem.name
         }
 
-        override fun areContentsTheSame(oldItem: MedicineEntity, newItem: MedicineEntity): Boolean {
+        override fun areContentsTheSame(oldItem: Medicine, newItem: Medicine): Boolean {
             return oldItem == newItem
         }
     }
